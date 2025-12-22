@@ -19,10 +19,6 @@ def run_bot(my_reff_link):
     options.add_argument('--no-sandbox')
     options.add_argument('--disable-dev-shm-usage')
     options.add_argument('--disable-gpu')
-    
-    # --- PERBAIKAN 1: SET LAYAR PANJANG AGAR TIDAK KEPOTONG ---
-    options.add_argument('--window-size=1080,1920') 
-    
     options.add_argument('--user-agent=Mozilla/5.0 (Linux; Android 10; K) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Mobile Safari/537.36')
     
     service = Service(executable_path=PATH_DRIVER)
@@ -30,28 +26,32 @@ def run_bot(my_reff_link):
     try:
         driver = webdriver.Chrome(service=service, options=options)
         print(f"\n[+] Membuka Link Reff...")
-        driver.get(my_reff_link) # Gunakan MY_LINK agar referral masuk
+        driver.get(my_reff_link) 
         
-        # Tunggu loading
+        # Tunggu form login muncul
         WebDriverWait(driver, 15).until(EC.presence_of_element_located((By.NAME, "login")))
 
         user = "user" + "".join(random.choices(string.ascii_lowercase, k=5))
         email = f"{user}@gmail.com"
         print(f"[+] Mencoba daftar: {user}")
         
-        # Isi Form
+        # Isi Form Atas
         driver.find_element(By.NAME, "login").send_keys(user)
         driver.find_element(By.NAME, "email").send_keys(email)
         driver.find_element(By.NAME, "pass").send_keys("Pass1234")
         
-        # --- PERBAIKAN 2: SCROLL KE ELEMEN CAPTCHA ---
-        # Ini supaya browser mendownload gambar angka 016/7436
-        print("[+] Menggeser layar ke Captcha...")
+        # --- SOLUSI TANPA WINDOW-SIZE: SCROLL PRESISI ---
+        # Kita paksa browser geser ke elemen 'cap_img' agar gambarnya didownload
+        print("[+] Scroll ke Captcha agar tidak terpotong...")
         captcha_img = driver.find_element(By.ID, "cap_img")
+        
+        # Menggunakan scrollIntoView agar elemen berada di tengah layar virtual
         driver.execute_script("arguments[0].scrollIntoView({block: 'center'});", captcha_img)
-        time.sleep(2) # Jeda agar download gambar selesai
+        
+        # Jeda krusial: Memberi waktu render image.php
+        time.sleep(3) 
 
-        # Ambil Captcha
+        # Ambil Captcha setelah posisi layar digeser
         driver.save_screenshot("captcha.png")
         os.system("cp captcha.png /sdcard/Download/captcha.png 2>/dev/null")
         
@@ -60,12 +60,12 @@ def run_bot(my_reff_link):
         print("!"*30)
         captcha_code = input(">>> Masukkan 4 angka captcha: ")
         
-        # Isi Angka & Klik Submit
+        # Isi Angka Captcha (Tanpa Klik Gambar agar angka tidak berubah)
         driver.find_element(By.NAME, "cap").send_keys(captcha_code)
         driver.find_element(By.NAME, "sub_reg").click()
         
         time.sleep(5)
-        print(f"[✔] Selesai! Cek di web apakah reff masuk.")
+        print(f"[✔] Selesai!")
 
     except Exception as e:
         print(f"[!] Terjadi Kendala: {e}")
