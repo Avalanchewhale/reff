@@ -28,17 +28,17 @@ def run_bot(my_reff_link):
         print(f"\n[+] Membuka Link Reff...")
         driver.get(my_reff_link) 
 
-        # --- LANGKAH BARU: KLIK TOMBOL CREATE AN ACCOUNT ---
-        print("[+] Menunggu tombol pendaftaran...")
+        # --- PERBAIKAN: CARI PAKAI CLASS BUTTON ---
+        print("[+] Mencari tombol pendaftaran...")
         try:
-            # Mencari tombol berdasarkan teks 'Create an account'
+            # Menggunakan CSS Selector berdasarkan class yang ada di kode HTML kamu
             btn_reg = WebDriverWait(driver, 15).until(
-                EC.element_to_be_clickable((By.LINK_TEXT, "Create an account"))
+                EC.element_to_be_clickable((By.CSS_SELECTOR, "a.btn.btn2.btn-success"))
             )
             btn_reg.click()
-            print("[✔] Tombol diklik, form terbuka.")
-        except:
-            print("[!] Tombol tidak ditemukan atau sudah di halaman form.")
+            print("[✔] Tombol 'Create an account' diklik.")
+        except Exception as e:
+            print(f"[!] Gagal klik tombol: {str(e)[:50]}")
 
         # Tunggu form pendaftaran muncul
         WebDriverWait(driver, 15).until(EC.presence_of_element_located((By.NAME, "login")))
@@ -46,20 +46,19 @@ def run_bot(my_reff_link):
         # Generate Data
         user = "user" + "".join(random.choices(string.ascii_lowercase, k=5))
         email = f"{user}@gmail.com"
-        print(f"[+] Mencoba daftar: {user}")
+        print(f"[+] Data baru: {user}")
         
         # Isi Form
         driver.find_element(By.NAME, "login").send_keys(user)
         driver.find_element(By.NAME, "email").send_keys(email)
         driver.find_element(By.NAME, "pass").send_keys("Pass1234")
         
-        # Scroll ke Captcha agar terlihat di screenshot
-        print("[+] Scroll ke Captcha...")
+        # Scroll ke Captcha agar muncul di layar virtual (Cegah Layar Potong)
         captcha_img = driver.find_element(By.ID, "cap_img")
         driver.execute_script("arguments[0].scrollIntoView({block: 'center'});", captcha_img)
         time.sleep(3) 
 
-        # Ambil Captcha
+        # Simpan Captcha
         driver.save_screenshot("captcha.png")
         os.system("cp captcha.png /sdcard/Download/captcha.png 2>/dev/null")
         
@@ -68,15 +67,15 @@ def run_bot(my_reff_link):
         print("!"*30)
         captcha_code = input(">>> Masukkan 4 angka captcha: ")
         
-        # Submit
+        # Submit Akhir
         driver.find_element(By.NAME, "cap").send_keys(captcha_code)
         driver.find_element(By.NAME, "sub_reg").click()
         
         time.sleep(5)
-        print(f"[✔] Selesai! User {user} telah diproses.")
+        print(f"[✔] Selesai! Cek akun {user}")
 
     except Exception as e:
-        print(f"[!] Terjadi Kendala: {str(e)}")
+        print(f"[!] Error: {str(e)}")
         if driver:
             driver.save_screenshot("error_log.png")
             os.system("cp error_log.png /sdcard/Download/error_log.png 2>/dev/null")
@@ -87,5 +86,5 @@ if __name__ == "__main__":
     MY_LINK = "https://gamety.org/?ref=53636"
     while True:
         run_bot(MY_LINK)
-        print("\n[!] GANTI IP (MODE PESAWAT) SEKARANG!")
+        print("\n[!] GANTI IP SEKARANG!")
         input(">>> Tekan ENTER jika sudah ganti IP...")
